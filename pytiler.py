@@ -12,6 +12,9 @@ import sys
 import time
 import pygame
 
+def error(msg):
+    print("Error: %s\n") % (msg)
+
 #-------------------------------------------------------------------------------
 class Tile():
     def __init__(self, filename=None, surface=None):
@@ -85,10 +88,11 @@ class PyTiler():
 	try:
             opts, args = getopt.getopt(sys.argv[1:], "abf:h:H:n:o:p:rs:S:w:W:",
                                        ["demo", "brick", "border=", "border_shade=", "rand_width"])
-	except getopt.GetoptError:
-            print("Unknown option\n")
+	except getopt.GetoptError as err:
+            error(str(err))
             self.usage()
             exit(1)
+
 	for o, a in opts:
             if o == "-a":
                 self.auto = True
@@ -125,7 +129,7 @@ class PyTiler():
                 if 0 <= shade <= 255:
                     self.border_shade = shade
                 else:
-                    print("Invalid border shade %d") % (shade)
+                    error(("Invalid border shade %d") % (shade))
                     self.usage()
                     exit(1)
             elif o == "--rand_width":
