@@ -3,6 +3,7 @@
 # Examples:
 # ./pytiler.py -a -f ~/media/blender/9\ Boulevard\ Clemenceau/textures/Birch.jpg -n 20 -H 32 -W 128 --brick --border=1
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 30 -H 32 -W 32 --border=3
+# ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 128 -H 64 -W 128 --border=4 -w 1024 -h 1024 --brick --rand_width -S 1976
 
 import getopt
 import os
@@ -46,6 +47,7 @@ class PyTiler():
         self.seed = 0
         self.tile_width = 64
         self.tile_height = 64
+        self.random_width = False
         self.width = 512
         self.height = 512
         self.border = 0
@@ -75,10 +77,11 @@ class PyTiler():
         print("  -W width        Individual tile width")
         print("  --brick         Use brick pattern")
         print("  --border=num    Tiles border width")
+        print("  --rand_width    Random tile width")
 
     def parse_args(self):
 	try:
-            opts, args = getopt.getopt(sys.argv[1:], "abf:h:H:n:o:p:rs:w:W:", ["demo", "brick", "border="])
+            opts, args = getopt.getopt(sys.argv[1:], "abf:h:H:n:o:p:rs:S:w:W:", ["demo", "brick", "border=", "rand_width"])
 	except getopt.GetoptError:
             print("Unknown option\n")
             self.usage()
@@ -114,7 +117,8 @@ class PyTiler():
                 self.demo = True
             elif o == "--border":
                 self.border = int(a)
-        self.random_width = False
+            elif o == "--rand_width":
+                self.random_width = True
 
     def run(self):
         """Initialize and run infinite event loop"""
@@ -149,12 +153,25 @@ class PyTiler():
                     r = pygame.Rect(0, 0, tile_width, self.tile_height)
                     border_surf = pygame.Surface((tile_width, self.tile_height), pygame.SRCALPHA)
                     border_surf.fill((0,0,0,0))
-                    #col = (16, 16, 16) # Good for wood floor
-                    col = (64, 64, 64)
-                    pygame.draw.line(border_surf, col, (0, 0), (tile_width-1, 0), self.border)
-                    pygame.draw.line(border_surf, col, (0, 0), (0, self.tile_height-1), self.border)
-                    subsurface.blit(border_surf, r, special_flags=pygame.BLEND_RGBA_SUB)
+                    if self.border < 4:
+                        border_surf.fill((0,0,0,0))
+                        #col = (16, 16, 16) # Good for wood floor
+                        col = (64, 64, 64)
+                        pygame.draw.line(border_surf, col, (0, 0), (tile_width-1, 0), self.border)
+                        pygame.draw.line(border_surf, col, (0, 0), (0, self.tile_height-1), self.border)
+                        subsurface.blit(border_surf, r, special_flags=pygame.BLEND_RGBA_SUB)
+                    else:
+                        col = (48, 48, 48)
+                        pygame.draw.rect(border_surf, col, (0, 0, tile_width, self.tile_height), self.border)
+                        col = (80, 80, 80)
+                        pygame.draw.rect(border_surf, col, (0, 0, tile_width, self.tile_height), 1)
+                        #subsurface.blit(border_surf, r)
+                        subsurface.blit(border_surf, r, special_flags=pygame.BLEND_RGBA_SUB)
                 self.tiles.append(Tile(surface=subsurface))
+
+        # Init window attribute
+        pygame.display.set_icon(pygame.image.load("PatternBrick.png"))
+        pygame.display.set_caption("PyTiler")
 
         # Set screen size
         size = self.width, self.height
@@ -194,8 +211,12 @@ class PyTiler():
         while y < self.height:
             if self.brick:
                 x = -random.randrange(0, self.tile_width)
+                print "X offset = " + str(x)
             else:
                 x = 0
+            first_tile = None
+            first_tile_angle = 0
+
             while x < self.width:
                 tile = random.choice(self.tiles)
                 if self.rotate:
@@ -203,9 +224,20 @@ class PyTiler():
                     #angle = random.randrange(0, 360)
                 else:
                     angle = 0
-                tile.draw_at(self.display, x, y, self.tile_width, self.tile_height, angle)
-                x += self.tile_width
+
+                if first_tile == None:
+                    first_tile = tile
+                    first_tile_angle = angle
+
+                if x + first_tile.rect.width > self.width:
+                    tile = first_tile
+                    angle = first_tile_angle
+
+                tile.draw_at(self.display, x, y, tile.rect.width, self.tile_height, angle)
+
+                x += tile.rect.width
             y += self.tile_height
+
         pygame.display.flip()
 
     def save(self):
