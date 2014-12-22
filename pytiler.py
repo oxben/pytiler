@@ -3,7 +3,7 @@
 # Examples:
 # ./pytiler.py -a -f ~/media/blender/9\ Boulevard\ Clemenceau/textures/Birch.jpg -n 20 -H 32 -W 128 --brick --border=1
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 30 -H 32 -W 32 --border=3
-# ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 128 -H 64 -W 128 --border=4 -w 1024 -h 1024 --brick --rand_width -S 1976
+# ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 128 -H 64 -W 128 --border=4 -w 1024 -h 1024 --brick --rand_width -S 1976 --border_shade=48
 
 import getopt
 import os
@@ -51,6 +51,7 @@ class PyTiler():
         self.width = 512
         self.height = 512
         self.border = 0
+        self.border_shade = 64
         self.outfilename = "out.png"
         self.tiles = []
 
@@ -64,24 +65,26 @@ class PyTiler():
         print("       " +  os.path.basename(sys.argv[0]) + \
              " -a -w width -h height -W tile_width -H tile_height -f -f input_filename -o output_filename")
         print("\nOptions:\n")
-        print("  -a              Auto-generate tiles")
-        print("  -f filename     Input texture filename")
-        print("  -h height       Output texture height")
-        print("  -H height       Individual tile height")
-        print("  -n num          Number of tiles to generate")
-        print("  -o filename     Output filename")
-        print("  -p prefix       Prefix of tiles files")
-        print("  -r              Randomly rotate tiles by 90 degree increment")
-        print("  -s              Random seed")
-        print("  -w width        Output texture width")
-        print("  -W width        Individual tile width")
-        print("  --brick         Use brick pattern")
-        print("  --border=num    Tiles border width")
-        print("  --rand_width    Random tile width")
+        print("  -a                 Auto-generate tiles")
+        print("  -f filename        Input texture filename")
+        print("  -h height          Output texture height")
+        print("  -H height          Individual tile height")
+        print("  -n num             Number of tiles to generate")
+        print("  -o filename        Output filename")
+        print("  -p prefix          Prefix of tiles files")
+        print("  -r                 Randomly rotate tiles by 90 degree increment")
+        print("  -s                 Random seed")
+        print("  -w width           Output texture width")
+        print("  -W width           Individual tile width")
+        print("  --brick            Use brick pattern")
+        print("  --border=num       Tiles border width")
+        print("  --border_shade=num Border shade (0..255)")
+        print("  --rand_width       Random tile width")
 
     def parse_args(self):
 	try:
-            opts, args = getopt.getopt(sys.argv[1:], "abf:h:H:n:o:p:rs:S:w:W:", ["demo", "brick", "border=", "rand_width"])
+            opts, args = getopt.getopt(sys.argv[1:], "abf:h:H:n:o:p:rs:S:w:W:",
+                                       ["demo", "brick", "border=", "border_shade=", "rand_width"])
 	except getopt.GetoptError:
             print("Unknown option\n")
             self.usage()
@@ -117,6 +120,14 @@ class PyTiler():
                 self.demo = True
             elif o == "--border":
                 self.border = int(a)
+            elif o == "--border_shade":
+                shade = int(a)
+                if 0 <= shade <= 255:
+                    self.border_shade = shade
+                else:
+                    print("Invalid border shade %d") % (shade)
+                    self.usage()
+                    exit(1)
             elif o == "--rand_width":
                 self.random_width = True
 
@@ -156,14 +167,14 @@ class PyTiler():
                     if self.border < 4:
                         border_surf.fill((0,0,0,0))
                         #col = (16, 16, 16) # Good for wood floor
-                        col = (64, 64, 64)
+                        col = (self.border_shade, self.border_shade, self.border_shade)
                         pygame.draw.line(border_surf, col, (0, 0), (tile_width-1, 0), self.border)
                         pygame.draw.line(border_surf, col, (0, 0), (0, self.tile_height-1), self.border)
                         subsurface.blit(border_surf, r, special_flags=pygame.BLEND_RGBA_SUB)
                     else:
-                        col = (48, 48, 48)
+                        col = (self.border_shade, self.border_shade, self.border_shade)
                         pygame.draw.rect(border_surf, col, (0, 0, tile_width, self.tile_height), self.border)
-                        col = (80, 80, 80)
+                        col = (min(self.border_shade+32, 255), min(self.border_shade+32, 255), min(self.border_shade+32, 255))
                         pygame.draw.rect(border_surf, col, (0, 0, tile_width, self.tile_height), 1)
                         #subsurface.blit(border_surf, r)
                         subsurface.blit(border_surf, r, special_flags=pygame.BLEND_RGBA_SUB)
