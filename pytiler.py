@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# PyTiler: Python script to generate tiled textures
+#
+# Author: Oxben <oxben@free.fr>
+#
 # Examples:
 # ./pytiler.py -a -f ~/media/blender/9\ Boulevard\ Clemenceau/textures/Birch.jpg -n 20 -H 32 -W 128 --brick --border=1
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 30 -H 32 -W 32 --border=3
