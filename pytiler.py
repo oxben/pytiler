@@ -4,6 +4,7 @@
 # ./pytiler.py -a -f ~/media/blender/9\ Boulevard\ Clemenceau/textures/Birch.jpg -n 20 -H 32 -W 128 --brick --border=1
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 30 -H 32 -W 32 --border=3
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 128 -H 64 -W 128 --border=4 -w 1024 -h 1024 --brick --rand_width -S 1976 --border_shade=48
+# ./pytiler.py -a -f ~/media/blender/textures/wood/oak-plank.png -n 12 -w 1024 -h 1024 -W 1024 -H 128 -o oak-planks.png
 
 import getopt
 import os
@@ -12,8 +13,10 @@ import sys
 import time
 import pygame
 
+
 def error(msg):
     print("Error: %s\n") % (msg)
+
 
 #-------------------------------------------------------------------------------
 class Tile():
@@ -36,12 +39,13 @@ class Tile():
         surface = pygame.transform.smoothscale(surface, (width, height))
         display.blit(surface, self.rect.move(x, y))
 
+
 #-------------------------------------------------------------------------------
 class PyTiler():
     def __init__(self):
         self.display = None
         self.auto = False
-        self.nr_tiles = 0
+        self.nr_tiles = 8
         self.filename = ""
         self.prefix = 'tile-'
         self.rotate = False
@@ -81,13 +85,13 @@ class PyTiler():
         print("  -W width           Individual tile width")
         print("  --brick            Use brick pattern")
         print("  --border=num       Tiles border width")
-        print("  --border_shade=num Border shade (0..255)")
-        print("  --rand_width       Random tile width")
+        print("  --border-shade=num Border shade (0..255) (greater values give darker border)")
+        print("  --rand-width       Random tile width")
 
     def parse_args(self):
 	try:
             opts, args = getopt.getopt(sys.argv[1:], "abf:h:H:n:o:p:rs:S:w:W:",
-                                       ["demo", "brick", "border=", "border_shade=", "rand_width"])
+                                       ["demo", "brick", "border=", "border-shade=", "rand-width"])
 	except getopt.GetoptError as err:
             error(str(err))
             self.usage()
@@ -124,7 +128,7 @@ class PyTiler():
                 self.demo = True
             elif o == "--border":
                 self.border = int(a)
-            elif o == "--border_shade":
+            elif o == "--border-shade":
                 shade = int(a)
                 if 0 <= shade <= 255:
                     self.border_shade = shade
@@ -132,13 +136,16 @@ class PyTiler():
                     error(("Invalid border shade %d") % (shade))
                     self.usage()
                     exit(1)
-            elif o == "--rand_width":
+            elif o == "--rand-width":
                 self.random_width = True
 
     def run(self):
         """Initialize and run infinite event loop"""
-        if self.seed != 0:
-            random.seed(self.seed)
+        if self.seed == 0:
+            self.seed = random.randrange(sys.maxsize)
+        random.seed(self.seed)
+
+        print("Random Seed: %d" % self.seed)
 
         pygame.key.set_repeat(100,100)
 
@@ -147,7 +154,7 @@ class PyTiler():
             for path in os.listdir('.'):
                 if os.path.isfile(path) and \
                    path.startswith(self.prefix) and \
-                   path.endswith('.png'):
+                   path.endswith('.png') or path.endswith('.jpg'):
                     self.tiles.append(Tile(filename=path))
         else:
             if not os.path.isfile(self.filename):
