@@ -9,7 +9,7 @@
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 30 -H 32 -W 32 --border=3
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 128 -H 64 -W 128 --border=4 -w 1024 -h 1024 --brick --rand_width -S 1976 --border_shade=48
 # ./pytiler.py -a -f ~/media/blender/textures/wood/oak-plank.png -n 12 -w 1024 -h 1024 -W 1024 -H 128 -o oak-planks.png
-# TILESIZE=64 ./pytiler.py -p face-2017112 -H $TILESIZE -W $TILESIZE -h $((20*$TILESIZE)) -w $((20*$TILESIZE)) --remove-after-use -o poster.png
+# TILESIZE=64 ~/src/pytiler/pytiler.py -p face-2017112 -H $TILESIZE -W $TILESIZE -h $((20 * TILESIZE)) -w $((20 * TILESIZE)) --remove-after-use -o poster.png
 
 import getopt
 import os
