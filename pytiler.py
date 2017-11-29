@@ -9,6 +9,7 @@
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 30 -H 32 -W 32 --border=3
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 128 -H 64 -W 128 --border=4 -w 1024 -h 1024 --brick --rand_width -S 1976 --border_shade=48
 # ./pytiler.py -a -f ~/media/blender/textures/wood/oak-plank.png -n 12 -w 1024 -h 1024 -W 1024 -H 128 -o oak-planks.png
+# TILESIZE=64 ./pytiler.py -p face-2017112 -H $TILESIZE -W $TILESIZE -h $((20*$TILESIZE)) -w $((20*$TILESIZE)) --remove-after-use -o poster.png
 
 import getopt
 import os
@@ -64,7 +65,9 @@ class PyTiler():
         self.border = 0
         self.border_shade = 64
         self.outfilename = "out.png"
+        self.remove_after_use = False
         self.tiles = []
+        self.tiles_trash = []
 
     def __str__(self):
         s = ""
@@ -91,11 +94,13 @@ class PyTiler():
         print("  --border=num       Tiles border width")
         print("  --border-shade=num Border shade (0..255) (greater values give darker border)")
         print("  --rand-width       Random tile width")
+        print("  --remove-after-use Remove tile from list after is has been used once")
+        print("                     This makes sure every tiles have been used before reusing one")
 
     def parse_args(self):
 	try:
             opts, args = getopt.getopt(sys.argv[1:], "abf:h:H:n:o:p:rs:S:w:W:",
-                                       ["demo", "brick", "border=", "border-shade=", "rand-width"])
+                                       ["demo", "brick", "border=", "border-shade=", "rand-width", "remove-after-use"])
 	except getopt.GetoptError as err:
             error(str(err))
             self.usage()
@@ -142,6 +147,8 @@ class PyTiler():
                     exit(1)
             elif o == "--rand-width":
                 self.random_width = True
+            elif o == "--remove-after-use":
+                self.remove_after_use = True
 
     def run(self):
         """Initialize and run infinite event loop"""
@@ -160,6 +167,7 @@ class PyTiler():
                    path.startswith(self.prefix) and \
                    path.endswith('.png') or path.endswith('.jpg'):
                     self.tiles.append(Tile(filename=path))
+            print("%d tiles loaded" % (len(self.tiles)))
         else:
             if not os.path.isfile(self.filename):
                 print("Error: No file '%s' found") % (self.filename)
@@ -196,8 +204,11 @@ class PyTiler():
                 self.tiles.append(Tile(surface=subsurface))
 
         # Init window attribute
-        pygame.display.set_icon(pygame.image.load("PatternBrick.png"))
         pygame.display.set_caption("PyTiler")
+        try:
+            pygame.display.set_icon(pygame.image.load("PatternBrick.png"))
+        except:
+            print("Error: Icon %s not found" % "PatternBrick.png")
 
         # Set screen size
         size = self.width, self.height
@@ -235,6 +246,7 @@ class PyTiler():
         self.display.fill(pygame.Color('#00000000'))
         y = 0
         while y < self.height:
+            # Set first tile offset
             if self.brick:
                 x = -random.randrange(0, self.tile_width)
                 print "X offset = " + str(x)
@@ -244,24 +256,44 @@ class PyTiler():
             first_tile_angle = 0
 
             while x < self.width:
+                # Choose next tile
+                if len(self.tiles) == 0:
+                    if len(self.tiles_trash) > 0:
+                        # Swap tile list
+                        self.tiles = self.tiles_trash
+                        self.tiles_trash = []
+                    else:
+                        raise Exception("Error: tile list is empty")
                 tile = random.choice(self.tiles)
+                if self.remove_after_use:
+                    self.tiles_trash.append(tile)
+                    self.tiles.remove(tile)
+
+                # Set rotation
                 if self.rotate:
                     angle = random.choice([0,90,180,270])
                     #angle = random.randrange(0, 360)
                 else:
                     angle = 0
 
+                # Save first tile of current line
+                # It is used to complete end of line, so wrapping is correct
                 if first_tile == None:
                     first_tile = tile
                     first_tile_angle = angle
 
-                if x + first_tile.rect.width > self.width:
+                if self.brick and (x + first_tile.rect.width) > self.width:
                     tile = first_tile
                     angle = first_tile_angle
 
-                tile.draw_at(self.display, x, y, tile.rect.width, self.tile_height, angle)
+                # Draw tile
+                if self.random_width:
+                    width = tile.rect.width
+                else:
+                    width = self.tile_width
+                tile.draw_at(self.display, x, y, width, self.tile_height, angle)
 
-                x += tile.rect.width
+                x += width
             y += self.tile_height
 
         pygame.display.flip()
