@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# PyTiler: Python script to generate tiled textures
+# PyTiler: Python script for generating tiled textures
 #
 # Author: Oxben <oxben@free.fr>
 #
@@ -11,6 +11,7 @@
 # ./pytiler.py -a -f ~/media/blender/textures/wood/oak-plank.png -n 12 -w 1024 -h 1024 -W 1024 -H 128 -o oak-planks.png
 # TILESIZE=64 ~/src/pytiler/pytiler.py -p face-2017112 -H $TILESIZE -W $TILESIZE -h $((20 * TILESIZE)) -w $((20 * TILESIZE)) --remove-after-use -o poster.png
 
+from __future__ import print_function
 import getopt
 import os
 import random
@@ -20,14 +21,14 @@ import pygame
 
 
 def error(msg):
-    print("Error: %s\n") % (msg)
+    print(("Error: %s\n") % (msg))
 
 
 #-------------------------------------------------------------------------------
 class Tile():
     def __init__(self, filename=None, surface=None):
         if filename != None:
-            print("Load %s") % (filename)
+            print("Load %s" % (filename))
             self.filename = filename
             self.surface = pygame.image.load(filename)
         elif surface != None:
@@ -170,7 +171,7 @@ class PyTiler():
             print("%d tiles loaded" % (len(self.tiles)))
         else:
             if not os.path.isfile(self.filename):
-                print("Error: No file '%s' found") % (self.filename)
+                error(("No file '%s' found") % (self.filename))
                 sys.exit(1)
             surface = pygame.image.load(self.filename)
 
@@ -181,7 +182,7 @@ class PyTiler():
                     tile_width = random.randrange(self.tile_width/2, self.tile_width)
                 else:
                     tile_width = self.tile_width
-                print tile_width
+                print(tile_width)
                 subsurface = surface.subsurface(pygame.Rect(x, y, tile_width, self.tile_height)).copy()
                 if self.border > 0:
                     r = pygame.Rect(0, 0, tile_width, self.tile_height)
@@ -208,7 +209,7 @@ class PyTiler():
         try:
             pygame.display.set_icon(pygame.image.load("PatternBrick.png"))
         except:
-            print("Error: Icon %s not found" % "PatternBrick.png")
+            error("Icon %s not found" % "PatternBrick.png")
 
         # Set screen size
         size = self.width, self.height
@@ -249,7 +250,7 @@ class PyTiler():
             # Set first tile offset
             if self.brick:
                 x = -random.randrange(0, self.tile_width)
-                print "X offset = " + str(x)
+                print("X offset = %d" % x)
             else:
                 x = 0
             first_tile = None
