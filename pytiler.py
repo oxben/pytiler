@@ -9,6 +9,7 @@
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 30 -H 32 -W 32 --border=3
 # ./pytiler.py -a -f ~/media/blender/textures/seamless/rock\ cave\ mountain\ brown\ texture\ 1024.jpg -n 128 -H 64 -W 128 --border=4 -w 1024 -h 1024 --brick --rand_width -S 1976 --border_shade=48
 # ./pytiler.py -a -f ~/media/blender/textures/wood/oak-plank.png -n 12 -w 1024 -h 1024 -W 1024 -H 128 -o oak-planks.png
+# ./pytiler.py -p Pattern -H 32 -W 32 -h 320 -w 320 --brick -r
 # TILESIZE=64 ~/src/pytiler/pytiler.py -p face-2017112 -H $TILESIZE -W $TILESIZE -h $((20 * TILESIZE)) -w $((20 * TILESIZE)) --remove-after-use -o poster.png
 
 from __future__ import print_function
@@ -25,7 +26,9 @@ def error(msg):
 
 
 #-------------------------------------------------------------------------------
-class Tile():
+class Tile:
+    '''Tile object. Stores a filename and the pygame surface.'''
+
     def __init__(self, filename=None, surface=None):
         if filename != None:
             print("Load %s" % (filename))
@@ -47,7 +50,9 @@ class Tile():
 
 
 #-------------------------------------------------------------------------------
-class PyTiler():
+class PyTiler:
+    '''PyTiler Main class'''
+
     def __init__(self):
         self.display = None
         self.auto = False
@@ -96,18 +101,18 @@ class PyTiler():
         print("  --border-shade=num Border shade (0..255) (greater values give darker border)")
         print("  --rand-width       Random tile width")
         print("  --remove-after-use Remove tile from list after is has been used once")
-        print("                     This makes sure every tiles have been used before reusing one")
+        print("                     This makes sure every tile has been used before reusing one")
 
     def parse_args(self):
-	try:
+        try:
             opts, args = getopt.getopt(sys.argv[1:], "abf:h:H:n:o:p:rs:S:w:W:",
                                        ["demo", "brick", "border=", "border-shade=", "rand-width", "remove-after-use"])
-	except getopt.GetoptError as err:
+        except getopt.GetoptError as err:
             error(str(err))
             self.usage()
             exit(1)
 
-	for o, a in opts:
+        for o, a in opts:
             if o == "-a":
                 self.auto = True
             elif o == "-f":
@@ -159,10 +164,10 @@ class PyTiler():
 
         print("Random Seed: %d" % self.seed)
 
-        pygame.key.set_repeat(100,100)
+        pygame.key.set_repeat(100, 100)
 
         # Load or create tiles
-        if self.auto == False:
+        if self.auto is False:
             for path in os.listdir('.'):
                 if os.path.isfile(path) and \
                    path.startswith(self.prefix) and \
@@ -187,9 +192,9 @@ class PyTiler():
                 if self.border > 0:
                     r = pygame.Rect(0, 0, tile_width, self.tile_height)
                     border_surf = pygame.Surface((tile_width, self.tile_height), pygame.SRCALPHA)
-                    border_surf.fill((0,0,0,0))
+                    border_surf.fill((0, 0, 0, 0))
                     if self.border < 4:
-                        border_surf.fill((0,0,0,0))
+                        border_surf.fill((0, 0, 0, 0))
                         #col = (16, 16, 16) # Good for wood floor
                         col = (self.border_shade, self.border_shade, self.border_shade)
                         pygame.draw.line(border_surf, col, (0, 0), (tile_width-1, 0), self.border)
@@ -272,14 +277,14 @@ class PyTiler():
 
                 # Set rotation
                 if self.rotate:
-                    angle = random.choice([0,90,180,270])
+                    angle = random.choice([0, 90, 180, 270])
                     #angle = random.randrange(0, 360)
                 else:
                     angle = 0
 
                 # Save first tile of current line
                 # It is used to complete end of line, so wrapping is correct
-                if first_tile == None:
+                if first_tile is None:
                     first_tile = tile
                     first_tile_angle = angle
 
