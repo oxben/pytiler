@@ -171,7 +171,7 @@ class PyTiler:
             for path in os.listdir('.'):
                 if os.path.isfile(path) and \
                    path.startswith(self.prefix) and \
-                   path.endswith('.png') or path.endswith('.jpg'):
+                   (path.endswith('.png') or path.endswith('.jpg')):
                     self.tiles.append(Tile(filename=path))
             print("%d tiles loaded" % (len(self.tiles)))
         else:
